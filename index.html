@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FlavourFinder · restaurant discovery (like Zomato)</title>
+    <!-- Font Awesome 6 (free) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body {
+            background-color: #f8f9fa;
+            color: #1f1f1f;
+            line-height: 1.4;
+        }
+
+        /* --- header / navigation (zomato style) --- */
+        .navbar {
+            background-color: #ffffff;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+            padding: 0.8rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .logo {
+            font-size: 2rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            color: #e23744;
+        }
+
+        .logo i {
+            font-size: 1.9rem;
+            margin-right: 6px;
+            color: #e23744;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2.2rem;
+            align-items: center;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: #363636;
+            font-weight: 500;
+            font-size: 1.05rem;
+            transition: 0.2s;
+        }
+
+        .nav-links a:hover {
+            color: #e23744;
+        }
+
+        .nav-links .user-avatar {
+            background-color: #f0f0f0;
+            border-radius: 30px;
+            padding: 0.4rem 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .user-avatar i {
+            font-size: 1.2rem;
+            color: #4a4a4a;
+        }
+
+        /* --- hero section with big search (zomato signature) --- */
+        .hero {
+            background: linear-gradient(0deg, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.4)), 
+                        url('https://images.unsplash.com/photo-1504674900247-0877df9cc836?q=80&w=2070&auto=format&fit=crop');
+            background-size: cover;
+            background-position: center 30%;
+            min-height: 420px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: white;
+            padding: 2rem 1.5rem;
+        }
+
+        .hero-content {
+            max-width: 820px;
+            width: 100%;
+        }
+
+        .hero h1 {
+            font-size: 3.2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.5px;
+            text-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+
+        .hero p {
+            font-size: 1.3rem;
+            margin-bottom: 2rem;
+            opacity: 0.95;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.4);
+        }
+
+        .search-container {
+            background: white;
+            border-radius: 60px;
+            display: flex;
+            align-items: center;
+            padding: 0.5rem 0.5rem 0.5rem 1.5rem;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+            flex-wrap: wrap;
+        }
+
+        .location-picker {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding-right: 1rem;
+            border-right: 2px solid #eaeaea;
+            color: #333;
+            min-width: 180px;
+        }
+
+        .location-picker i {
+            color: #e23744;
+            font-size: 1.1rem;
+        }
+
+        .location-picker select {
+            border: none;
+            background: transparent;
+            font-size: 1rem;
+            font-weight: 500;
+            color: #1f1f1f;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .search-input {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            padding: 0 1rem;
+            gap: 12px;
+            min-width: 240px;
+        }
+
+        .search-input i {
+            color: #b0b0b0;
+            font-size: 1.2rem;
+        }
+
+        .search-input input {
+            border: none;
+            width: 100%;
+            font-size: 1.05rem;
+            padding: 0.75rem 0;
+            outline: none;
+        }
+
+        .search-btn {
+            background-color: #e23744;
+            border: none;
+            color: white;
+            padding: 0.9rem 2rem;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: 0.2s;
+            white-space: nowrap;
+        }
+
+        .search-btn:hover {
+            background-color: #c41e2b;
+        }
+
+        /* --- quick categories (popular cuisines) --- */
+        .section-title {
+            font-size: 2rem;
+            font-weight: 600;
+            margin: 2.5rem 0 1.2rem 2rem;
+            letter-spacing: -0.3px;
+        }
+
+        .cuisine-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.8rem;
+            justify-content: center;
+            margin: 0 2rem 3rem;
+        }
+
+        .cuisine-card {
+            background: white;
+            border-radius: 18px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.03);
+            transition: transform 0.2s, box-shadow 0.2s;
+            width: 150px;
+            text-align: center;
+            cursor: pointer;
+            border: 1px solid rgba(0,0,0,0.02);
+        }
+
+        .cuisine-card:hover {
+            transform: scale(1.03);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.08);
+        }
+
+        .cuisine-card img {
+            width: 100%;
+            height: 130px;
+            object-fit: cover;
+        }
+
+        .cuisine-card span {
+            display: block;
+            padding: 0.8rem 0;
+            font-weight: 500;
+            color: #2d2d2d;
+        }
+
+        /* --- restaurant collection (like dining out / delivery) --- */
+        .collection-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 1rem 2rem 0.5rem;
+        }
+
+        .collection-bar h2 {
+            font-size: 2rem;
+            font-weight: 600;
+            letter-spacing: -0.3px;
+        }
+
+        .collection-bar a {
+            color: #e23744;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .resto-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 2rem;
+            margin: 1.5rem 2rem 4rem;
+        }
+
+        .resto-card {
+            background: white;
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 10px 22px -8px rgba(0,0,0,0.06);
+            transition: 0.2s ease;
+            border: 1px solid #f0f0f0;
+        }
+
+        .resto-card:hover {
+            box-shadow: 0 25px 35px -12px rgba(0,0,0,0.15);
+            transform: translateY(-6px);
+        }
+
+        .resto-img {
+            position: relative;
+            height: 170px;
+            background-size: cover;
+            background-position: center;
+        }
+
+        .offer-tag {
+            position: absolute;
+            bottom: 12px;
+            left: 16px;
+            background: #1b7c47;
+            color: white;
+            padding: 0.3rem 1rem;
+            border-radius: 30px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .resto-info {
+            padding: 1.2rem 1rem 1rem;
+        }
+
+        .resto-name {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 700;
+            font-size: 1.2rem;
+            margin-bottom: 6px;
+        }
+
+        .resto-name span {
+            background: #267e3e;
+            color: white;
+            border-radius: 8px;
+            padding: 0.2rem 0.5rem;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .resto-cuisine {
+            color: #5f5f5f;
+            font-size: 0.95rem;
+            margin-bottom: 5px;
+        }
+
+        .resto-meta {
+            display: flex;
+            gap: 1.5rem;
+            color: #414141;
+            font-size: 0.9rem;
+            border-top: 1px solid #ebebeb;
+            margin-top: 10px;
+            padding-top: 10px;
+        }
+
+        .resto-meta i {
+            color: #e23744;
+            width: 18px;
+        }
+
+        /* --- order online banner (like zomato's app) --- */
+        .app-banner {
+            background-color: #2b1b16;
+            background-image: radial-gradient(circle at 70% 30%, #4b2e24, #1f130e);
+            color: white;
+            border-radius: 40px;
+            margin: 2rem 2rem 3rem;
+            padding: 3rem 4rem;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .app-text h3 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .app-text p {
+            font-size: 1.2rem;
+            opacity: 0.85;
+        }
+
+        .app-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .app-buttons button {
+            background: rgba(255,255,255,0.12);
+            border: 1.5px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 0.9rem 2rem;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .app-buttons button:hover {
+            background: white;
+            color: #2b1b16;
+            border-color: white;
+        }
+
+        /* --- footer (similar to zomato) --- */
+        .footer {
+            background: #f1f2f4;
+            padding: 2.5rem 2rem 1rem;
+            margin-top: 3rem;
+        }
+
+        .footer-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            border-bottom: 1px solid #d9d9d9;
+            padding-bottom: 1.5rem;
+        }
+
+        .footer-logo {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #e23744;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 3rem;
+            flex-wrap: wrap;
+        }
+
+        .footer-col p {
+            font-weight: 600;
+            margin-bottom: 0.8rem;
+            color: #1f1f1f;
+        }
+
+        .footer-col a {
+            display: block;
+            text-decoration: none;
+            color: #575757;
+            margin-bottom: 0.5rem;
+            font-size: 0.95rem;
+        }
+
+        .footer-col a:hover {
+            color: #e23744;
+        }
+
+        .footer-bottom {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem 0 0.5rem;
+            color: #5f5f5f;
+            font-size: 0.9rem;
+            flex-wrap: wrap;
+        }
+
+        .socials i {
+            font-size: 1.5rem;
+            margin-left: 1.2rem;
+            color: #4d4d4d;
+            transition: 0.2s;
+        }
+
+        .socials i:hover {
+            color: #e23744;
+        }
+
+        /* --- responsive touches --- */
+        @media (max-width: 750px) {
+            .navbar {
+                padding: 0.8rem 1.2rem;
+            }
+            .hero h1 {
+                font-size: 2.4rem;
+            }
+            .search-container {
+                border-radius: 40px;
+                flex-direction: column;
+                background: transparent;
+                box-shadow: none;
+                gap: 10px;
+            }
+            .location-picker {
+                border-right: none;
+                background: white;
+                border-radius: 50px;
+                padding: 0.8rem 1.5rem;
+                width: 100%;
+            }
+            .search-input {
+                background: white;
+                border-radius: 50px;
+                padding: 0.5rem 1.5rem;
+                width: 100%;
+            }
+            .search-btn {
+                width: 100%;
+                border-radius: 50px;
+            }
+            .app-banner {
+                flex-direction: column;
+                text-align: center;
+                gap: 1.5rem;
+                padding: 2rem 1.5rem;
+            }
+            .section-title {
+                margin-left: 1.2rem;
+                font-size: 1.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- header / navigation -->
+    <nav class="navbar">
+        <div class="logo">
+            <i class="fas fa-utensils"></i> flavourfinder
+        </div>
+        <div class="nav-links">
+            <a href="#"> <i class="fa-regular fa-compass"></i> Explore</a>
+            <a href="#"> <i class="fa-regular fa-star"></i> Pro</a>
+            <a href="#"> <i class="fa-regular fa-bell"></i></a>
+            <a href="#" class="user-avatar"> <i class="fa-regular fa-circle-user"></i> Sign in</a>
+        </div>
+    </nav>
+
+    <!-- hero with search (zomato style) -->
+    <section class="hero">
+        <div class="hero-content">
+            <h1>Find the best food & cafés</h1>
+            <p>Discover the perfect restaurant near you — or anywhere</p>
+            <div class="search-container">
+                <div class="location-picker">
+                    <i class="fa-solid fa-location-dot"></i>
+                    <select>
+                        <option>Mumbai</option>
+                        <option>Delhi NCR</option>
+                        <option>Bengaluru</option>
+                        <option>Pune</option>
+                        <option>Kolkata</option>
+                    </select>
+                </div>
+                <div class="search-input">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" placeholder="Search for restaurant, cuisine, or dish...">
+                </div>
+                <button class="search-btn">Search</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- popular cuisines (quick categories) -->
+    <h2 class="section-title">Popular cuisines near you</h2>
+    <div class="cuisine-grid">
+        <div class="cuisine-card">
+            <img src="https://images.unsplash.com/photo-1565299585323-38d6b0865b47?w=400&auto=format" alt="pizza">
+            <span>Pizza</span>
+        </div>
+        <div class="cuisine-card">
+            <img src="https://images.unsplash.com/photo-1586190848861-99aa4a171e90?w=400&auto=format" alt="burger">
+            <span>Burger</span>
+        </div>
+        <div class="cuisine-card">
+            <img src="https://images.unsplash.com/photo-1601050690597-df0568f70950?w=400&auto=format" alt="sushi">
+            <span>Sushi</span>
+        </div>
+        <div class="cuisine-card">
+            <img src="https://images.unsplash.com/photo-1631515243349-e0cb75fb8d3a?w=400&auto=format" alt="noodles">
+            <span>Noodles</span>
+        </div>
+        <div class="cuisine-card">
+            <img src="https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?w=400&auto=format" alt="biryani">
+            <span>Biryani</span>
+        </div>
+        <div class="cuisine-card">
+            <img src="https://images.unsplash.com/photo-1578160112054-954a67602b88?w=400&auto=format" alt="cafe">
+            <span>Café</span>
+        </div>
+    </div>
+
+    <!-- collections & restaurant cards (like dining out) -->
+    <div class="collection-bar">
+        <h2>Best dining restaurants</h2>
+        <a href="#">see all <i class="fa-solid fa-arrow-right"></i></a>
+    </div>
+
+    <div class="resto-grid">
+        <!-- card 1 -->
+        <div class="resto-card">
+            <div class="resto-img" style="background-image: url('https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=500&auto=format');">
+                <span class="offer-tag">50% off • Use code WELCOME</span>
+            </div>
+            <div class="resto-info">
+                <div class="resto-name">
+                    Olive Bar & Kitchen <span>4.3 <i class="fa-solid fa-star"></i></span>
+                </div>
+                <div class="resto-cuisine">Italian • Mediterranean • ₹1,800 for two</div>
+                <div class="resto-meta">
+                    <span><i class="fa-regular fa-clock"></i> 35 min</span>
+                    <span><i class="fa-solid fa-bicycle"></i> free</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- card 2 -->
+        <div class="resto-card">
+            <div class="resto-img" style="background-image: url('https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=500&auto=format');">
+                <span class="offer-tag">20% off • above ₹500</span>
+            </div>
+            <div class="resto-info">
+                <div class="resto-name">
+                    The Bombay Canteen <span>4.6 <i class="fa-solid fa-star"></i></span>
+                </div>
+                <div class="resto-cuisine">Modern Indian • ₹2,000 for two</div>
+                <div class="resto-meta">
+                    <span><i class="fa-regular fa-clock"></i> 45 min</span>
+                    <span><i class="fa-solid fa-bicycle"></i> ₹30</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- card 3 -->
+        <div class="resto-card">
+            <div class="resto-img" style="background-image: url('https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=500&auto=format');">
+                <span class="offer-tag">Flat ₹100 off</span>
+            </div>
+            <div class="resto-info">
+                <div class="resto-name">
+                    Burma Burma <span>4.5 <i class="fa-solid fa-star"></i></span>
+                </div>
+                <div class="resto-cuisine">Burmese • Vegetarian • ₹1,600 for two</div>
+                <div class="resto-meta">
+                    <span><i class="fa-regular fa-clock"></i> 30 min</span>
+                    <span><i class="fa-solid fa-bicycle"></i> free</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- card 4 -->
+        <div class="resto-card">
+            <div class="resto-img" style="background-image: url('https://images.unsplash.com/photo-1550966871-3ed3cdb5ed0c?w=500&auto=format');">
+                <span class="offer-tag">15% off + free dessert</span>
+            </div>
+            <div class="resto-info">
+                <div class="resto-name">
+                    Pujagut <span>4.2 <i class="fa-solid fa-star"></i></span>
+                </div>
+                <div class="resto-cuisine">Asian • Fusion • ₹1,900 for two</div>
+                <div class="resto-meta">
+                    <span><i class="fa-regular fa-clock"></i> 25 min</span>
+                    <span><i class="fa-solid fa-bicycle"></i> ₹20</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- order online section with app banner (like zomato) -->
+    <div class="app-banner">
+        <div class="app-text">
+            <h3>Get the FlavourFinder App</h3>
+            <p>Order faster & track live • exclusive app deals</p>
+        </div>
+        <div class="app-buttons">
+            <button><i class="fa-brands fa-apple"></i> App Store</button>
+            <button><i class="fa-brands fa-google-play"></i> Play Store</button>
+        </div>
+    </div>
+
+    <!-- more collections: new delivery spots -->
+    <div class="collection-bar">
+        <h2>Popular delivery spots</h2>
+        <a href="#">view all <i class="fa-solid fa-arrow-right"></i></a>
+    </div>
+
+    <div class="resto-grid" style="margin-bottom: 2rem;">
+        <!-- card 5 -->
+        <div class="resto-card">
+            <div class="resto-img" style="background-image: url('https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=500&auto=format');">
+                <span class="offer-tag">30% off + freebie</span>
+            </div>
+            <div class="resto-info">
+                <div class="resto-name">
+                    Bademiya <span>4.4 <i class="fa-solid fa-star"></i></span>
+                </div>
+                <div class="resto-cuisine">Kebab • Rolls • ₹800 for two</div>
+                <div class="resto-meta">
+                    <span><i class="fa-regular fa-clock"></i> 40 min</span>
+                    <span><i class="fa-solid fa-bicycle"></i> ₹25</span>
+                </div>
+            </div>
+        </div>
+        <!-- card 6 -->
+        <div class="resto-card">
+            <div class="resto-img" style="background-image: url('https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format');">
+                <span class="offer-tag">Buy 1 get 1</span>
+            </div>
+            <div class="resto-info">
+                <div class="resto-name">
+                    Sam's Pizza <span>4.1 <i class="fa-solid fa-star"></i></span>
+                </div>
+                <div class="resto-cuisine">Pizza • Fast food • ₹950 for two</div>
+                <div class="resto-meta">
+                    <span><i class="fa-regular fa-clock"></i> 30 min</span>
+                    <span><i class="fa-solid fa-bicycle"></i> free</span>
+                </div>
+            </div>
+        </div>
+        <!-- card 7 -->
+        <div class="resto-card">
+            <div class="resto-img" style="background-image: url('https://images.unsplash.com/photo-1512058454905-45d8aa4e7b1a?w=500&auto=format');">
+                <span class="offer-tag">20% off · first order</span>
+            </div>
+            <div class="resto-info">
+                <div class="resto-name">
+                    Bastian <span>4.7 <i class="fa-solid fa-star"></i></span>
+                </div>
+                <div class="resto-cuisine">Seafood • European • ₹2,800 for two</div>
+                <div class="resto-meta">
+                    <span><i class="fa-regular fa-clock"></i> 50 min</span>
+                    <span><i class="fa-solid fa-bicycle"></i> ₹40</span>
+                </div>
+            </div>
+        </div>
+        <!-- card 8 -->
+        <div class="resto-card">
+            <div class="resto-img" style="background-image: url('https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=500&auto=format');">
+                <span class="offer-tag">₹125 off · code MONSOON</span>
+            </div>
+            <div class="resto-info">
+                <div class="resto-name">
+                    Kailash Parbat <span>4.0 <i class="fa-solid fa-star"></i></span>
+                </div>
+                <div class="resto-cuisine">North Indian • Street food • ₹900 for two</div>
+                <div class="resto-meta">
+                    <span><i class="fa-regular fa-clock"></i> 30 min</span>
+                    <span><i class="fa-solid fa-bicycle"></i> ₹15</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- footer (inspired by zomato) -->
+    <footer class="footer">
+        <div class="footer-top">
+            <span class="footer-logo"><i class="fas fa-utensils"></i> flavourfinder</span>
+            <div style="display: flex; gap: 1.5rem;">
+                <span><i class="fa-regular fa-flag"></i> India </span>
+                <span><i class="fa-solid fa-globe"></i> English </span>
+            </div>
+        </div>
+
+        <div style="display: flex; flex-wrap: wrap; gap: 3rem; justify-content: space-between; margin: 2rem 0 0;">
+            <div class="footer-links">
+                <div class="footer-col">
+                    <p>About</p>
+                    <a href="#">Who we are</a>
+                    <a href="#">Blog</a>
+                    <a href="#">Work with us</a>
+                </div>
+                <div class="footer-col">
+                    <p>For foodies</p>
+                    <a href="#">Code of conduct</a>
+                    <a href="#">Community</a>
+                    <a href="#">Verified users</a>
+                </div>
+                <div class="footer-col">
+                    <p>Restaurants</p>
+                    <a href="#">Add restaurant</a>
+                    <a href="#">Business app</a>
+                    <a href="#">Advertise</a>
+                </div>
+                <div class="footer-col">
+                    <p>Learn more</p>
+                    <a href="#">Privacy</a>
+                    <a href="#">Terms</a>
+                    <a href="#">Security</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer-bottom">
+            <span>© 2025 FlavourFinder — like Zomato, but a classroom demo</span>
+            <div class="socials">
+                <i class="fa-brands fa-instagram"></i>
+                <i class="fa-brands fa-x-twitter"></i>
+                <i class="fa-brands fa-facebook"></i>
+                <i class="fa-brands fa-youtube"></i>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>
